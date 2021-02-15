@@ -1,3 +1,5 @@
+package priv.droptea.emotion.util;
+
 import java.awt.EventQueue;
 import java.awt.Font;
 
