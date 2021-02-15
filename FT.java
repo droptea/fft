@@ -1,35 +1,48 @@
+package priv.droptea.emotion.ft;
+
+import priv.droptea.emotion.util.ChartTool;
+
 public class FT {
     public static void main(String[] args) {
     	//模拟一个由两个频率不同的正弦波组成的音频数据
-    	int N = 8000;
-    	double f1 = 1.0/20;
-    	double f2 = 1.0/10;
+    	int N = 5000;
+    	//5个点一个周期，假设这N个数据是Ts秒的音频数据，那么f=5000/5*1/Ts=1000/Ts,由k=f*Ts,所以傅里叶变换后k=1000的值就是这个sin函数的振幅
+    	double f_sin1 = 1.0/5;
+    	//改变第一个正弦函数的相位
+    	int phase_sin1 = 1;
+    	//振幅
+    	double amplitude_sin1 = 0.8;
+    	//同上，傅里叶变换后k=500的值就是这个sin函数的振幅
+    	double f_sin2 = 1.0/10;
+    	//振幅
+    	double amplitude_sin2 = 0.4;
     	Complex[] data = Complex.initArray(N);
     	for (int i = 0; i < data.length; i++) {
-    		data[i].re=0.8*Math.sin(2*Math.PI*i*f1)+0.4*Math.sin(2*Math.PI*i*f2);//0.8*Math.sin(2*PI*k1*i);
+    		data[i].re=amplitude_sin1*Math.sin(2*Math.PI*i*f_sin1+phase_sin1)+amplitude_sin2*Math.sin(2*Math.PI*i*f_sin2);//0.8*Math.sin(2*PI*k1*i);
 		}
-    	new ChartTool("原函数",complaxsToDoubles(data));
+    	new ChartTool("原函数",modulus(data));
     	//dftForward
     	long timeDftForward = System.currentTimeMillis();
     	Complex[] resultDftForward = dftForward(data);
-    	new ChartTool("dftForward",complaxsToDoubles(resultDftForward));
-    	System.out.println("runtime_DftForward:"+(System.currentTimeMillis()-timeDftForward));
+    	new ChartTool("dftForward",modulus(resultDftForward));
+    	System.out.println("runtime_dftForward:"+(System.currentTimeMillis()-timeDftForward));
     	//dftInverse
     	long timeDftInverse = System.currentTimeMillis();
     	Complex[] resultDftInverse =  dftInverse(resultDftForward);
-    	new ChartTool("dftInverse",complaxsToDoubles(resultDftInverse));
-    	System.out.println("runtime_DftInverse:"+(System.currentTimeMillis()-timeDftInverse));
+    	new ChartTool("dftInverse",modulus(resultDftInverse));
+    	System.out.println("runtime_dftInverse:"+(System.currentTimeMillis()-timeDftInverse));
     	//fftForward
     	long timeFftForward = System.currentTimeMillis();
     	Complex[] resultFftForward = fftForward(data);
-    	new ChartTool("fftForward",complaxsToDoubles(resultFftForward));
-    	System.out.println("runtime_FftForward:"+(System.currentTimeMillis()-timeFftForward));
+    	new ChartTool("fftForward",modulus(resultFftForward));
+    	System.out.println("runtime_fftForward:"+(System.currentTimeMillis()-timeFftForward));
     	//fftForward
     	long timeFftInverse = System.currentTimeMillis();
     	Complex[] resultFftInverse = fftInverse(resultFftForward);
-    	new ChartTool("fftInverse",complaxsToDoubles(resultFftInverse));
-    	System.out.println("runtime_FftForward:"+(System.currentTimeMillis()-timeFftInverse));
+    	new ChartTool("fftInverse",modulus(resultFftInverse));
+    	System.out.println("runtime_fftInverse:"+(System.currentTimeMillis()-timeFftInverse));
     	
+    	new ChartTool("相位谱",atan(resultFftForward));
 	}
     
     public static Complex[] fftForward(Complex[] x) {
@@ -142,10 +155,19 @@ public class FT {
 		return output;
 	}
 	
-	public static double[] complaxsToDoubles(Complex[] complaxs) {
+	public static double[] modulus(Complex[] complaxs) {
 		double[] result = new double[complaxs.length];
 		for (int i = 0; i <complaxs.length ; i++) {
 			result[i] = Math.sqrt(complaxs[i].re*complaxs[i].re+complaxs[i].im*complaxs[i].im);
+		}
+		return result;
+	}
+	public static double[] atan(Complex[] complaxs) {
+		double[] result = new double[complaxs.length];
+		for (int i = 0; i <complaxs.length ; i++) {
+			if(Math.sqrt(complaxs[i].re*complaxs[i].re+complaxs[i].im*complaxs[i].im)>0.2) {
+				result[i] = Math.atan(complaxs[i].im/complaxs[i].re);
+			}
 		}
 		return result;
 	}
